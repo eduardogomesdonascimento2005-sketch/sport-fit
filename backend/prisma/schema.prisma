@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  TRAINER
+  STUDENT
+}
+
+enum StudentStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum PaymentStatus {
+  PAID
+  PENDING
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole @default(STUDENT)
+  avatar    String?  @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Student {
+  id         String           @id @default(uuid())
+  name       String
+  age        Int
+  objective  String
+  status     StudentStatus    @default(ACTIVE)
+  trainer    String
+  plan       String
+  attendance Int              @default(0)
+  workouts   Workout[]
+  payments   Payment[]
+  progress   ProgressRecord[]
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+}
+
+model Workout {
+  id        String   @id @default(uuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id])
+  title     String
+  focus     String
+  duration  String
+  exercises Int
+  difficulty String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ScheduleItem {
+  id        String   @id @default(uuid())
+  title     String
+  date      String
+  time      String
+  type      String
+  trainer   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Payment {
+  id        String        @id @default(uuid())
+  studentId  String
+  student    Student       @relation(fields: [studentId], references: [id])
+  plan      String
+  value     Decimal       @db.Decimal(10, 2)
+  dueDate   String
+  status    PaymentStatus @default(PENDING)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model ProgressRecord {
+  id        String   @id @default(uuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id])
+  date      String
+  weight    Decimal  @db.Decimal(5, 2)
+  waist     Int
+  chest     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

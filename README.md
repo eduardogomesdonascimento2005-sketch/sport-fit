@@ -1,123 +1,38 @@
-# SportFit
+import 'dotenv/config';
+import cors from 'cors';
+import express from 'express';
+import './types/express.d.ts';
 
-Aplicativo completo de academia para gestão de alunos, treinos, agenda, pagamentos e evolução física.
+import authRoutes from './routes/auth.js';
+import dashboardRoutes from './routes/dashboard.js';
+import studentRoutes from './routes/students.js';
+import workoutRoutes from './routes/workouts.js';
+import scheduleRoutes from './routes/schedule.js';
+import paymentRoutes from './routes/payments.js';
+import progressRoutes from './routes/progress.js';
 
-## Visão geral
+const app = express();
+const PORT = Number(process.env.PORT ?? 3001);
 
-O SportFit é uma solução de gestão para academias com foco em:
-- cadastro e acompanhamento de alunos
-- criação e atribuição de treinos
-- agenda de aulas e sessões
-- controle de pagamentos e planos
-- acompanhamento de evolução e dashboard operacional
+app.use(cors());
+app.use(express.json());
 
-## Stack utilizada
+app.get('/api/health', (_req, res) => {
+  res.json({
+    status: 'ok',
+    service: 'sport-fit-api',
+    timestamp: new Date().toISOString()
+  });
+});
 
-- Backend: Node.js + Express + TypeScript
-- Frontend: React + Vite + TypeScript
-- Estilo: CSS puro
-- API: REST
+app.use('/api/auth', authRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/students', studentRoutes);
+app.use('/api/workouts', workoutRoutes);
+app.use('/api/schedule', scheduleRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/progress', progressRoutes);
 
-## Estrutura do projeto
-
-```text
-sport-fit/
-├── backend/
-│   ├── src/
-│   ├── package.json
-│   ├── tsconfig.json
-│   └── .env.example
-├── frontend/
-│   ├── src/
-│   ├── package.json
-│   ├── vite.config.ts
-│   ├── tsconfig.json
-│   └── index.html
-├── .gitignore
-├── README.md
-├── package.json
-└── .env.example
-```
-
-## Requisitos
-
-- Node.js 18+
-- npm
-
-## Instalação
-
-Na raiz do projeto:
-
-```bash
-npm install --prefix backend
-npm install --prefix frontend
-```
-
-## Executando localmente
-
-Terminal 1 - backend:
-
-```bash
-npm --prefix backend run dev
-```
-
-Terminal 2 - frontend:
-
-```bash
-npm --prefix frontend run dev
-```
-
-O frontend será disponibilizado em:
-
-```text
-http://localhost:5173
-```
-
-A API estará em:
-
-```text
-http://localhost:3001
-```
-
-## Credenciais demo
-
-```json
-{
-  "email": "admin@sportfit.com",
-  "password": "123456"
-}
-```
-
-## Endpoints principais
-
-- `GET /api/health`
-- `POST /api/auth/login`
-- `GET /api/dashboard`
-- `GET /api/students`
-- `GET /api/workouts`
-- `GET /api/schedule`
-- `GET /api/payments`
-- `GET /api/progress`
-
-## Funcionalidades do MVP
-
-- dashboard de desempenho
-- gerenciamento de alunos
-- criação de treinos
-- agenda de aulas e sessões
-- controle de pagamentos
-- histórico de evolução
-- autenticação mockada
-
-## Próximos passos recomendados
-
-- integração com banco PostgreSQL
-- autenticação real com JWT
-- upload de fotos e documentos
-- painel para admin e personal trainer
-- notificação por WhatsApp/Firebase
-- versionamento de treinos
-
-## Observação
-
-Este projeto é uma base funcional e pronta para evolução, ideal para apresentar a ideia do aplicativo e partir para desenvolvimento completo.
+app.listen(PORT, () => {
+  console.log(`SportFit API running on http://localhost:${PORT}`);
+});

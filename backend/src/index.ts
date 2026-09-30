@@ -1,74 +1,42 @@
-import express, { type Request, type Response } from 'express';
-import cors from 'cors';
+import { Router } from 'express';
 import { z } from 'zod';
+import { prisma } from '../lib/prisma.js';
+import { requireAuth } from '../lib/auth.js';
 
-import { dashboard, payments, progress, schedule, students, users, workouts } from './data.js';
+const router = Router();
+const progressSchema = z.object({
+  studentId: z.string().min(1),
+  date: z.string().min(1),
+  weight: z.number().min(0),
+  waist: z.number().min(0),
+  chest: z.number().min(0)
+});
 
-const app = express();
-const PORT = Number(process.env.PORT ?? 3001);
-
-app.use(cors());
-app.use(express.json());
-
-app.get('/api/health', (_req: Request, res: Response) => {
-  res.json({
-    status: 'ok',
-    service: 'sport-fit-backend',
-    timestamp: new Date().toISOString()
+router.get('/', requireAuth, async (_req, res) => {
+  const progress = await prisma.progressRecord.findMany({
+    include: { student: true },
+    orderBy: { date: 'asc' }
   });
+
+  return res.json(progress);
 });
 
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(3)
-});
-
-app.post('/api/auth/login', (req: Request, res: Response) => {
-  const parsed = loginSchema.safeParse(req.body);
+router.post('/', requireAuth, async (req, res) => {
+  const parsed = progressSchema.safeParse(req.body);
 
   if (!parsed.success) {
-    return res.status(400).json({ message: 'Email e senha inválidos.' });
+    return res.status(400).json({ message: 'Dados de evolução inválidos.' });
   }
 
-  const { email, password } = parsed.data;
-  const user = users.find((item) => item.email === email && item.password === password);
-
-  if (!user) {
-    return res.status(401).json({ message: 'Credenciais incorretas.' });
-  }
-
-  const { password: _password, ...safeUser } = user;
-
-  return res.json({
-    token: 'demo-token-sportfit',
-    user: safeUser
+  const record = await prisma.progressRecord.create({
+    data: {
+      ...parsed.data,
+      weight: parsed.data.weight.toString()
+    },
+    include: { student: true }
   });
+
+  return res.status(201).json(record);
 });
 
-app.get('/api/dashboard', (_req: Request, res: Response) => {
-  res.json(dashboard);
-});
-
-app.get('/api/students', (_req: Request, res: Response) => {
-  res.json(students);
-});
-
-app.get('/api/workouts', (_req: Request, res: Response) => {
-  res.json(workouts);
-});
-
-app.get('/api/schedule', (_req: Request, res: Response) => {
-  res.json(schedule);
-});
-
-app.get('/api/payments', (_req: Request, res: Response) => {
-  res.json(payments);
-});
-
-app.get('/api/progress', (_req: Request, res: Response) => {
-  res.json(progress);
-});
-
-app.listen(PORT, () => {
-  console.log(`SportFit API running on http://localhost:${PORT}`);
-});
+export default router;
