@@ -1,5 +1,13 @@
 import { useEffect, useState } from 'react';
 
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  avatar?: string;
+}
+
 interface DashboardData {
   activeStudents: number;
   monthlyRevenue: number;
@@ -12,7 +20,7 @@ interface Student {
   name: string;
   age: number;
   objective: string;
-  status: 'ativo' | 'inativo';
+  status: 'ACTIVE' | 'INACTIVE';
   trainer: string;
   plan: string;
   attendance: number;
@@ -21,7 +29,7 @@ interface Student {
 interface Workout {
   id: string;
   title: string;
-  student: string;
+  student: { name: string };
   focus: string;
   duration: string;
   exercises: number;
@@ -39,12 +47,14 @@ interface ScheduleItem {
 
 interface Payment {
   id: string;
-  student: string;
+  student: { name: string };
   plan: string;
-  value: number;
+  value: number | string;
   dueDate: string;
-  status: string;
+  status: 'PAID' | 'PENDING';
 }
+
+const API_BASE = 'http://localhost:3001/api';
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat('pt-BR', {
@@ -52,40 +62,160 @@ const formatCurrency = (value: number) =>
     currency: 'BRL'
   }).format(value);
 
+async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const token = localStorage.getItem('sportfit_token');
+
+  const response = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(options.headers ?? {})
+    }
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || 'Erro na requisição');
+  }
+
+  return response.json() as Promise<T>;
+}
+
 export default function App() {
+  const [token, setToken] = useState<string | null>(localStorage.getItem('sportfit_token'));
+  const [user, setUser] = useState<User | null>(null);
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [schedule, setSchedule] = useState<ScheduleItem[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [loginForm, setLoginForm] = useState({
+    email: 'admin@sportfit.com',
+    password: '123456'
+  });
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [dashboardData, studentsData, workoutsData, scheduleData, paymentsData] = await Promise.all([
+        apiFetch<DashboardData>('/dashboard'),
+        apiFetch<Student[]>('/students'),
+        apiFetch<Workout[]>('/workouts'),
+        apiFetch<ScheduleItem[]>('/schedule'),
+        apiFetch<Payment[]>('/payments')
+      ]);
+
+      setDashboard(dashboardData);
+      setStudents(studentsData);
+      setWorkouts(workoutsData);
+      setSchedule(scheduleData);
+      setPayments(paymentsData);
+      setError('');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro ao carregar dados';
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    Promise.all([
-      fetch('/api/dashboard'),
-      fetch('/api/students'),
-      fetch('/api/workouts'),
-      fetch('/api/schedule'),
-      fetch('/api/payments')
-    ])
-      .then(async ([dashboardRes, studentsRes, workoutsRes, scheduleRes, paymentsRes]) => {
-        const dashboardData = await dashboardRes.json();
-        const studentsData = await studentsRes.json();
-        const workoutsData = await workoutsRes.json();
-        const scheduleData = await scheduleRes.json();
-        const paymentsData = await paymentsRes.json();
+    if (!token) {
+      setUser(null);
+      return;
+    }
 
-        setDashboard(dashboardData);
-        setStudents(studentsData);
-        setWorkouts(workoutsData);
-        setSchedule(scheduleData);
-        setPayments(paymentsData);
-      })
-      .catch((error) => {
-        console.error('Erro ao carregar dados da API:', error);
+    const storedUser = localStorage.getItem('sportfit_user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+
+    loadData();
+  }, [token]);
+
+  const handleLogin = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setLoading(true);
+
+    try {
+      const response = await apiFetch<{ token: string; user: User }>('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify(loginForm)
       });
-  }, []);
 
-  if (!dashboard) {
+      localStorage.setItem('sportfit_token', response.token);
+      localStorage.setItem('sportfit_user', JSON.stringify(response.user));
+      setToken(response.token);
+      setUser(response.user);
+      setError('');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Falha ao fazer login';
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('sportfit_token');
+    localStorage.removeItem('sportfit_user');
+    setToken(null);
+    setUser(null);
+    setDashboard(null);
+    setStudents([]);
+    setWorkouts([]);
+    setSchedule([]);
+    setPayments([]);
+  };
+
+  if (!token) {
+    return (
+      <div className="auth-layout">
+        <div className="auth-card">
+          <div className="brand-block">
+            <span className="brand-mini">SportFit</span>
+            <h1>Controle de academia</h1>
+            <p>Gerencie alunos, treinos, agenda e pagamentos em um só lugar.</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="auth-form">
+            <h2>Entrar</h2>
+            <label>
+              Email
+              <input
+                type="email"
+                value={loginForm.email}
+                onChange={(event) => setLoginForm((prev) => ({ ...prev, email: event.target.value }))}
+              />
+            </label>
+            <label>
+              Senha
+              <input
+                type="password"
+                value={loginForm.password}
+                onChange={(event) => setLoginForm((prev) => ({ ...prev, password: event.target.value }))}
+              />
+            </label>
+
+            {error && <div className="error-box">{error}</div>}
+
+            <button type="submit" className="primary-btn" disabled={loading}>
+              {loading ? 'Entrando...' : 'Entrar'}
+            </button>
+
+            <small className="demo-credentials">
+              Demo: admin@sportfit.com / 123456
+            </small>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  if (!dashboard || loading) {
     return <div className="loading">Carregando SportFit...</div>;
   }
 
@@ -100,13 +230,14 @@ export default function App() {
           <a className="nav-item" href="#">Agenda</a>
           <a className="nav-item" href="#">Pagamentos</a>
         </nav>
+        <button className="logout-btn" onClick={handleLogout}>Sair</button>
       </aside>
 
       <main className="content">
         <header className="topbar">
           <div>
             <p className="eyebrow">Painel administrativo</p>
-            <h1>Bem-vindo ao SportFit</h1>
+            <h1>Bem-vindo, {user?.name ?? 'usuário'} </h1>
           </div>
           <button className="primary-btn">Adicionar aluno</button>
         </header>
@@ -152,7 +283,7 @@ export default function App() {
                     <td>{student.objective}</td>
                     <td>{student.plan}</td>
                     <td>
-                      <span className={`status ${student.status}`}>{student.status}</span>
+                      <span className={`status ${student.status.toLowerCase()}`}>{student.status === 'ACTIVE' ? 'ativo' : 'inativo'}</span>
                     </td>
                   </tr>
                 ))}
@@ -170,7 +301,7 @@ export default function App() {
                 <div key={workout.id} className="list-item">
                   <div>
                     <h3>{workout.title}</h3>
-                    <p>{workout.student}</p>
+                    <p>{workout.student?.name ?? 'Aluno'}</p>
                   </div>
                   <span>{workout.duration}</span>
                 </div>
@@ -210,12 +341,12 @@ export default function App() {
               {payments.map((payment) => (
                 <div key={payment.id} className="payment-item">
                   <div>
-                    <strong>{payment.student}</strong>
+                    <strong>{payment.student.name}</strong>
                     <p>{payment.plan}</p>
                   </div>
                   <div className="payment-meta">
-                    <span>{payment.status}</span>
-                    <strong>{formatCurrency(payment.value)}</strong>
+                    <span>{payment.status === 'PAID' ? 'Pago' : 'Pendente'}</span>
+                    <strong>{formatCurrency(Number(payment.value))}</strong>
                   </div>
                 </div>
               ))}
