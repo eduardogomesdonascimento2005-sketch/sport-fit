@@ -1,42 +1,38 @@
-import { Router } from 'express';
-import { z } from 'zod';
-import { prisma } from '../lib/prisma.js';
-import { requireAuth } from '../lib/auth.js';
+import 'dotenv/config';
+import cors from 'cors';
+import express from 'express';
+import './types/express.d.ts';
 
-const router = Router();
-const progressSchema = z.object({
-  studentId: z.string().min(1),
-  date: z.string().min(1),
-  weight: z.number().min(0),
-  waist: z.number().min(0),
-  chest: z.number().min(0)
-});
+import authRoutes from './routes/auth.js';
+import dashboardRoutes from './routes/dashboard.js';
+import studentRoutes from './routes/students.js';
+import workoutRoutes from './routes/workouts.js';
+import scheduleRoutes from './routes/schedule.js';
+import paymentRoutes from './routes/payments.js';
+import progressRoutes from './routes/progress.js';
 
-router.get('/', requireAuth, async (_req, res) => {
-  const progress = await prisma.progressRecord.findMany({
-    include: { student: true },
-    orderBy: { date: 'asc' }
+const app = express();
+const PORT = Number(process.env.PORT ?? 3001);
+
+app.use(cors());
+app.use(express.json());
+
+app.get('/api/health', (_req, res) => {
+  res.json({
+    status: 'ok',
+    service: 'sport-fit-api',
+    timestamp: new Date().toISOString()
   });
-
-  return res.json(progress);
 });
 
-router.post('/', requireAuth, async (req, res) => {
-  const parsed = progressSchema.safeParse(req.body);
+app.use('/api/auth', authRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/students', studentRoutes);
+app.use('/api/workouts', workoutRoutes);
+app.use('/api/schedule', scheduleRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/progress', progressRoutes);
 
-  if (!parsed.success) {
-    return res.status(400).json({ message: 'Dados de evolução inválidos.' });
-  }
-
-  const record = await prisma.progressRecord.create({
-    data: {
-      ...parsed.data,
-      weight: parsed.data.weight.toString()
-    },
-    include: { student: true }
-  });
-
-  return res.status(201).json(record);
+app.listen(PORT, () => {
+  console.log(`SportFit API running on http://localhost:${PORT}`);
 });
-
-export default router;
