@@ -1,240 +1,123 @@
 # SportFit
 
-Aplicativo de academia para gestão de alunos, treinos, agendamentos, mensalidades e acompanhamento de evolução física.
+Aplicativo completo de academia para gestão de alunos, treinos, agenda, pagamentos e evolução física.
 
-## 1. Objetivo do produto
+## Visão geral
 
-O SportFit é uma solução digital para academias que centraliza a gestão de membros, planejamento de treinos, agenda de aulas e acompanhamento de desempenho. O objetivo é melhorar a rotina de professores, personal trainers e administradores, além de oferecer uma experiência clara e motivadora para os alunos.
+O SportFit é uma solução de gestão para academias com foco em:
+- cadastro e acompanhamento de alunos
+- criação e atribuição de treinos
+- agenda de aulas e sessões
+- controle de pagamentos e planos
+- acompanhamento de evolução e dashboard operacional
 
-## 2. Público-alvo
+## Stack utilizada
 
-- Academias de pequeno e médio porte
-- Personal trainers e instrutores
-- Administradores e recepção
-- Alunos e clientes de treinos personalizados
+- Backend: Node.js + Express + TypeScript
+- Frontend: React + Vite + TypeScript
+- Estilo: CSS puro
+- API: REST
 
-## 3. Personas principais
+## Estrutura do projeto
 
-### 3.1 Administrador da academia
-- Gerencia membros, planos e pagamentos
-- Acompanha faturamento e presença
-- Configura treinos e aulas
+```text
+sport-fit/
+├── backend/
+│   ├── src/
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── .env.example
+├── frontend/
+│   ├── src/
+│   ├── package.json
+│   ├── vite.config.ts
+│   ├── tsconfig.json
+│   └── index.html
+├── .gitignore
+├── README.md
+├── package.json
+└── .env.example
+```
 
-### 3.2 Personal trainer
-- Cria e ajusta treinos
-- Acompanha progresso dos clientes
-- Agenda sessões e avalia desempenho
+## Requisitos
 
-### 3.3 Aluno
-- Consulta treinos e aulas
-- Visualiza progresso e metas
-- Agenda horários e acompanha pagamentos
+- Node.js 18+
+- npm
 
-## 4. Escopo funcional
+## Instalação
 
-### 4.1 Autenticação e usuários
-- Cadastro de usuários com perfil de administrador, instrutor ou aluno
-- Login com email/senha
-- Recuperação de senha
-- Perfil do usuário com foto, dados pessoais e permissões
+Na raiz do projeto:
 
-### 4.2 Gestão de alunos
-- Cadastro de alunos com nome, idade, objetivo, altura, peso e histórico
-- Busca por aluno
-- Status ativo/inativo
-- Histórico de treinos e presença
-- Observações do personal
+```bash
+npm install --prefix backend
+npm install --prefix frontend
+```
 
-### 4.3 Treinos
-- Criação de treinos por objetivo (emagrecimento, hipertrofia, condicionamento, etc.)
-- Definição de exercícios com:
-  - nome
-  - grupo muscular
-  - série
-  - repetição
-  - carga
-  - descanso
-  - observações
-- Atribuição de treino a um aluno
-- Edição e histórico de versões
-- Marcação de treino concluído
+## Executando localmente
 
-### 4.4 Agenda e agendamentos
-- Agenda de aulas e treinos
-- Agendamento de sessões individuais
-- Confirmação/ cancelamento de agendamentos
-- Visualização por dia, semana e mês
-- Lembretes de treino e aula
+Terminal 1 - backend:
 
-### 4.5 Pagamentos e planos
-- Cadastro de planos de assinatura
-- Controle de mensalidades
-- Histórico de pagamentos
-- Status em dia/atrasado
-- Notificações de cobrança
+```bash
+npm --prefix backend run dev
+```
 
-### 4.6 Acompanhamento de evolução
-- Registro de peso, medida corporal e desempenho
-- Gráficos de progresso
-- Evolução por período
-- Comparativo entre avaliações
+Terminal 2 - frontend:
 
-### 4.7 Presença e frequências
-- Registro de presença em aulas ou treinos
-- Relatório de frequência por aluno
-- Estatísticas de comparecimento
+```bash
+npm --prefix frontend run dev
+```
 
-### 4.8 Dashboard
-- Resumo geral da academia
-- Número de alunos ativos
-- Faturamento do mês
-- Aulas e treinos do dia
-- Alunos com pendências
+O frontend será disponibilizado em:
 
-### 4.9 Notificações
-- Lembrete de treino
-- Lembrete de aula
-- Avisos de pagamento
-- Mensagens para alunos e instrutores
+```text
+http://localhost:5173
+```
 
-## 5. Regras de negócio principais
+A API estará em:
 
-- Cada aluno pode ter apenas um plano ativo por vez
-- Cada treino pode ser atribuído a vários alunos
-- A personalização do treino pode variar conforme objetivo e evolução
-- O administrador pode visualizar todas as informações e permissões gerais
-- Alunos podem visualizar apenas seus dados e treinos
-- Instrutores podem gerenciar os alunos vinculados a eles
+```text
+http://localhost:3001
+```
 
-## 6. Funcionalidades do MVP
+## Credenciais demo
 
-### MVP (versão inicial)
-- Login e cadastro de usuários
-- Cadastro de alunos
-- Criação de treinos
-- Atribuição de treino ao aluno
-- Agenda de aulas e treinos
-- Registro de pagamentos
-- Dashboard básico
-- Perfil de usuário
+```json
+{
+  "email": "admin@sportfit.com",
+  "password": "123456"
+}
+```
 
-## 7. Funcionalidades futuras
+## Endpoints principais
 
-- App mobile para Android/iOS
-- Chat entre aluno e personal trainer
-- Integração com WhatsApp
-- Módulo de marketing e campanhas
-- Integração com cartão e Pix
-- IA para recomendação de treinos
-- Relatórios em PDF e exportação
+- `GET /api/health`
+- `POST /api/auth/login`
+- `GET /api/dashboard`
+- `GET /api/students`
+- `GET /api/workouts`
+- `GET /api/schedule`
+- `GET /api/payments`
+- `GET /api/progress`
 
-## 8. Arquitetura proposta
+## Funcionalidades do MVP
 
-### Backend
-- Node.js com NestJS ou Express
-- TypeScript
-- PostgreSQL
-- Prisma ORM
-- JWT para autenticação
-- REST API
+- dashboard de desempenho
+- gerenciamento de alunos
+- criação de treinos
+- agenda de aulas e sessões
+- controle de pagamentos
+- histórico de evolução
+- autenticação mockada
 
-### Frontend
-- React + Vite para web
-- React Native para mobile
-- Expo para desenvolvimento mobile
+## Próximos passos recomendados
 
-### Infraestrutura
-- PostgreSQL em produção
-- Firebase para notificações
-- Deploy em Vercel/Render
+- integração com banco PostgreSQL
+- autenticação real com JWT
+- upload de fotos e documentos
+- painel para admin e personal trainer
+- notificação por WhatsApp/Firebase
+- versionamento de treinos
 
-## 9. Estrutura de dados principal
+## Observação
 
-### Entidades
-- User
-- Student
-- Trainer
-- Plan
-- Payment
-- Workout
-- Exercise
-- Schedule
-- Attendance
-- ProgressRecord
-- Notification
-
-## 10. Telas sugeridas
-
-### Web/admin
-- Login
-- Dashboard
-- Alunos
-- Treinos
-- Agendamento
-- Pagamentos
-- Relatórios
-- Configurações
-
-### Mobile/aluno
-- Login
-- Home
-- Meus treinos
-- Agenda
-- Progresso
-- Pagamento
-- Perfil
-
-## 11. Critérios de aceitação
-
-- O administrador consegue cadastrar e editar alunos
-- O professor consegue criar treinos personalizados
-- O aluno consegue visualizar seus exercícios e agenda
-- O sistema registra pagamentos e mostra status do plano
-- O dashboard apresenta dados atualizados em tempo real
-- A aplicação funciona em navegadores modernos e dispositivos móveis
-
-## 12. Roadmap inicial
-
-### Fase 1 - MVP
-- Autenticação
-- Gestão de alunos
-- Treinos
-- Agenda
-- Pagamentos
-
-### Fase 2 - Melhorias operacionais
-- Dashboard detalhado
-- Presença
-- Gráficos de evolução
-- Lembretes automáticos
-
-### Fase 3 - Escala e diferenciação
-- Mobile nativo
-- App para aluno e instrutor
-- Notificações inteligentes
-- Relatórios avançados
-
-## 13. Proposta de branding
-
-Nome: SportFit
-
-Tagline: Treine melhor. Evolua todos os dias.
-
-Visual: moderno, energético e motivador, com paleta que combine:
-- verde fitness
-- preto premium
-- branco limpo
-- cinza elegante
-
-## 14. Resumo Executivo
-
-O SportFit é uma plataforma completa para gestão de academias, com foco em praticidade para os administradores, apoio para instrutores e melhor experiência para os alunos. O produto possibilita organização operacional, acompanhamento de evolução e maior retenção de clientes por meio de dados e automação.
-
----
-
-Se quiser, posso seguir para a próxima etapa e criar a estrutura inicial do projeto com:
-- frontend em React
-- backend em Node.js/NestJS
-- banco de dados PostgreSQL
-- autenticação JWT
-- organização de pastas e arquivos
+Este projeto é uma base funcional e pronta para evolução, ideal para apresentar a ideia do aplicativo e partir para desenvolvimento completo.
