@@ -54,6 +54,15 @@ interface Payment {
   status: 'PAID' | 'PENDING';
 }
 
+interface ProgressItem {
+  id: string;
+  student: { name: string };
+  date: string;
+  weight: number | string;
+  waist: number;
+  chest: number;
+}
+
 const API_BASE = 'http://localhost:3001/api';
 
 const formatCurrency = (value: number) =>
@@ -90,6 +99,7 @@ export default function App() {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [schedule, setSchedule] = useState<ScheduleItem[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [progress, setProgress] = useState<ProgressItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [loginForm, setLoginForm] = useState({
@@ -100,12 +110,13 @@ export default function App() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [dashboardData, studentsData, workoutsData, scheduleData, paymentsData] = await Promise.all([
+      const [dashboardData, studentsData, workoutsData, scheduleData, paymentsData, progressData] = await Promise.all([
         apiFetch<DashboardData>('/dashboard'),
         apiFetch<Student[]>('/students'),
         apiFetch<Workout[]>('/workouts'),
         apiFetch<ScheduleItem[]>('/schedule'),
-        apiFetch<Payment[]>('/payments')
+        apiFetch<Payment[]>('/payments'),
+        apiFetch<ProgressItem[]>('/progress')
       ]);
 
       setDashboard(dashboardData);
@@ -113,6 +124,7 @@ export default function App() {
       setWorkouts(workoutsData);
       setSchedule(scheduleData);
       setPayments(paymentsData);
+      setProgress(progressData);
       setError('');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao carregar dados';
@@ -169,6 +181,7 @@ export default function App() {
     setWorkouts([]);
     setSchedule([]);
     setPayments([]);
+    setProgress([]);
   };
 
   if (!token) {
@@ -206,9 +219,7 @@ export default function App() {
               {loading ? 'Entrando...' : 'Entrar'}
             </button>
 
-            <small className="demo-credentials">
-              Demo: admin@sportfit.com / 123456
-            </small>
+            <small className="demo-credentials">Demo: admin@sportfit.com / 123456</small>
           </form>
         </div>
       </div>
@@ -237,7 +248,7 @@ export default function App() {
         <header className="topbar">
           <div>
             <p className="eyebrow">Painel administrativo</p>
-            <h1>Bem-vindo, {user?.name ?? 'usuário'} </h1>
+            <h1>Bem-vindo, {user?.name ?? 'usuário'}</h1>
           </div>
           <button className="primary-btn">Adicionar aluno</button>
         </header>
@@ -283,7 +294,9 @@ export default function App() {
                     <td>{student.objective}</td>
                     <td>{student.plan}</td>
                     <td>
-                      <span className={`status ${student.status.toLowerCase()}`}>{student.status === 'ACTIVE' ? 'ativo' : 'inativo'}</span>
+                      <span className={`status ${student.status.toLowerCase()}`}>
+                        {student.status === 'ACTIVE' ? 'ativo' : 'inativo'}
+                      </span>
                     </td>
                   </tr>
                 ))}
@@ -341,12 +354,36 @@ export default function App() {
               {payments.map((payment) => (
                 <div key={payment.id} className="payment-item">
                   <div>
-                    <strong>{payment.student.name}</strong>
+                    <strong>{payment.student?.name ?? 'Aluno'}</strong>
                     <p>{payment.plan}</p>
                   </div>
                   <div className="payment-meta">
                     <span>{payment.status === 'PAID' ? 'Pago' : 'Pendente'}</span>
                     <strong>{formatCurrency(Number(payment.value))}</strong>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="panel-full">
+          <div className="panel">
+            <div className="panel-header">
+              <h2>Evolução</h2>
+              <span>Histórico</span>
+            </div>
+            <div className="stack-list">
+              {progress.map((item) => (
+                <div key={item.id} className="progress-item">
+                  <div>
+                    <strong>{item.student?.name ?? 'Aluno'}</strong>
+                    <p>{item.date}</p>
+                  </div>
+                  <div className="progress-meta">
+                    <span>Peso: {Number(item.weight).toFixed(1)} kg</span>
+                    <span>Cintura: {item.waist} cm</span>
+                    <span>Peito: {item.chest} cm</span>
                   </div>
                 </div>
               ))}
